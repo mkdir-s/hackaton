@@ -15,7 +15,8 @@ ReactDOM.createRoot(document.getElementById('root')).render(
             fontSize: 16,
           },
           components:{
-            DatePicker:{
+            Progress:{
+              defaultColor: '#00805f'
             }
           }
       }}

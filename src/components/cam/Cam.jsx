@@ -53,6 +53,7 @@ function Cam() {
       .then(response => {
         // Обработка ответа от сервера
         console.log('Server response:', response.data);
+        
       })
       .catch(error => {
         console.error('Error sending data to server: ', error);

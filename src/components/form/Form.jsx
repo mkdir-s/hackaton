@@ -14,8 +14,9 @@ import {
   Table
 } from "antd";
 import InputMask from "react-input-mask";
-const { Text } = Typography;
+const { Text, Paragraph } = Typography;
 const { RangePicker } = DatePicker;
+import validationSchema from "./validationSchema";
 
 function Form() {
   const [formData, setFormData] = useState({
@@ -29,15 +30,16 @@ function Form() {
     economicActivityType: "",
     amountOfEmployees: 1,
     gfotOfEmployees: 510000,
-    doesExistContract: "",
+    doesExistContract: false,
     dateOfInsuranceCommencement: "",
     dateOfInsuranceTermination: "",
-    hasBranchesOfCompany: "",
+    hasBranchesOfCompany: null,
     frequencyOfInsurance: "",
     paymentMethod: "",
-    edsOfFirstHead: "",
+    edsOfFirstHead: null,
     whoSignsDeclaration: "",
   });
+  const [errors, setErrors] = useState({});
 
   const columns = [
     {
@@ -98,8 +100,6 @@ function Form() {
       [stateValue]: text,
     });
   };
-
-
 
   const onChangeDate = (date, dateString) => {
     setFormData({
@@ -171,8 +171,29 @@ function Form() {
     });
   };
 
-  const onSubmitForm = () => {
-    console.log(formData)
+  const validateForm = async () => {
+    try {
+      await validationSchema.validate(formData, { abortEarly: false });
+      setErrors({});
+      return true;
+    } catch (validationErrors) {
+      const errorsObj = {};
+      validationErrors.inner.forEach(error => {
+        errorsObj[error.path] = error.message;
+      });
+      setErrors(errorsObj);
+      return false;
+    }
+  };
+
+  const onSubmitForm = async (e) => {
+    const isValid = await validateForm();
+    
+    if (isValid) {
+      console.log("Form is valid. Submitting...");
+    } else {
+      console.log("Form is invalid. Please fix errors.");
+    }
   }
 
   return (
@@ -198,6 +219,7 @@ function Form() {
                     Страхователь – юридическое лицо
                   </Radio>
                 </Radio.Group>
+                {errors.policyholderType && <Paragraph type="danger">{errors.policyholderType}</Paragraph>}
               </div>
               <div className="form__block">
                 <Text>
@@ -210,6 +232,8 @@ function Form() {
                   onChange={onChangeIndentification}
                   style={{width:"20%", minWidth:"200px"}}
                 />
+                
+                {errors.identificationNumber && <Paragraph type="danger">{errors.identificationNumber}</Paragraph>}
               </div>
               <div className="form__block">
                 <Text>
@@ -227,6 +251,8 @@ function Form() {
                     label: item,
                   }))}
                 />
+                {errors.region && <Paragraph type="danger">{errors.region}</Paragraph>}
+
               </div>
               <Flex gap={"50px"}>
                 <div className="form__block">
@@ -241,12 +267,14 @@ function Form() {
                   >
                     {() => <Input />}
                   </InputMask>
+                  {errors.mobilePhone && <Paragraph type="danger">{errors.mobilePhone}</Paragraph>}
                 </div>
                 <div className="form__block">
                   <Text>
                     Корпоративный e-mail страхователя<sup>*</sup>
                   </Text>
                   <Input onChange={onChangeEmail} />
+                  {errors.corporateEmail && <Paragraph type="danger">{errors.corporateEmail}</Paragraph>}
                 </div>
               </Flex>
               <Flex>
@@ -256,6 +284,7 @@ function Form() {
                     (указать с какого месяца и года)<sup>*</sup>
                   </Text>
                   <DatePicker onChange={onChangeDate} />
+                  {errors.organizationStartDate && <Paragraph type="danger">{errors.organizationStartDate}</Paragraph>}
                 </div>
                 <div className="form__block">
                   <Text>
@@ -268,6 +297,7 @@ function Form() {
                     <Radio value={true}>Да</Radio>
                     <Radio value={false}>Нет</Radio>
                   </Radio.Group>
+                  {errors.insuranceEventsPastFiveYears && <Paragraph type="danger">{errors.insuranceEventsPastFiveYears}</Paragraph>}
                 </div>
               </Flex>
             </Flex>
@@ -287,6 +317,7 @@ function Form() {
                     label: type.type,
                   }))}
                 />
+                {errors.economicActivityType && <Paragraph type="danger">{errors.economicActivityType}</Paragraph>}
               </div>
               <div className="form__block">
                 <Text>
@@ -296,6 +327,7 @@ function Form() {
                   defaultValue={1}
                   onChange={onChangeAmount}
                 />
+                {errors.amountOfEmployees && <Paragraph type="danger">{errors.amountOfEmployees}</Paragraph>}
               </div>
               <div className="form__block">
                 <Text>Укажите ГФОТ работников, подлежащих страхованию </Text>
@@ -304,6 +336,7 @@ function Form() {
                   defaultValue={510000}
                   onChange={onChangeGfot}
                 />
+                {errors.gfotOfEmployees && <Paragraph type="danger">{errors.gfotOfEmployees}</Paragraph>}
               </div>
               <div className="form__block">
                 <Table columns={columns} dataSource={data} pagination={false} bordered={true} />
@@ -317,6 +350,7 @@ function Form() {
                   <Radio value={true}>Да</Radio>
                   <Radio value={false}>Нет</Radio>
                 </Radio.Group>
+                {errors.doesExistContract && <Paragraph type="danger">{errors.doesExistContract}</Paragraph>}
               </div>
               </Flex>
               <Flex vertical gap={"middle"}>
@@ -327,6 +361,7 @@ function Form() {
                 </Text>
                 <br />
                 <RangePicker onChange={onChangeDates} format={"YYYY-MM-DD"} />
+                {errors.dateOfInsuranceTermination && <Paragraph type="danger">{errors.dateOfInsuranceTermination}</Paragraph>}
               </div>
               <div className="form__block">
                 <Text>Имеет ли Ваша организация филиалы?</Text>
@@ -338,6 +373,7 @@ function Form() {
                   <Radio value={true}>Да</Radio>
                   <Radio value={false}>Нет</Radio>
                 </Radio.Group>
+                {errors.hasBranchesOfCompany && <Paragraph type="danger">{errors.hasBranchesOfCompany}</Paragraph>}
               </div>
               <div className="form__block">
                 <Text>
@@ -351,6 +387,7 @@ function Form() {
                   <Radio value={"once"}>Единовременно</Radio>
                   <Radio value={"installments"}>В рассрочку</Radio>
                 </Radio.Group>
+                {errors.frequencyOfInsurance && <Paragraph type="danger">{errors.frequencyOfInsurance}</Paragraph>}
               </div>
               <div className="form__block">
                 <Text>
@@ -364,6 +401,7 @@ function Form() {
                   <Radio value={"online"}>Онлайн оплата платёжной картой</Radio>
                   <Radio value={"by-bill"}>Оплатить по счету</Radio>
                 </Radio.Group>
+                {errors.paymentMethod && <Paragraph type="danger">{errors.paymentMethod}</Paragraph>}
               </div>
               <div className="form__block">
                 <Text>
@@ -378,6 +416,7 @@ function Form() {
                   <Radio value={true}>Да</Radio>
                   <Radio value={false}>Нет</Radio>
                 </Radio.Group>
+                {errors.edsOfFirstHead && <Paragraph type="danger">{errors.edsOfFirstHead}</Paragraph>}
               </div>
               <div className="form__block">
                 <Text>
@@ -393,6 +432,7 @@ function Form() {
                     Отправить на подпись первому руководителю
                   </Radio>
                 </Radio.Group>
+                {errors.whoSignsDeclaration && <Paragraph type="danger">{errors.whoSignsDeclaration}</Paragraph>}
               </div>
             </Flex>
             <Button onClick={() => onSubmitForm()} type="primary">Отправить заявку</Button>
